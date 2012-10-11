@@ -35,5 +35,27 @@ describe 'Chorusgnip' do
         g.auth.should be_false
       end
     end
+
+    it "returns false for a plain HTTP url" do
+      VCR.use_cassette('plain_http_gnip') do
+        g = ChorusGnip.new(
+          :url => 'http://historical.gnip.com/something',
+          :username => 'someemail',
+          :password => 'wrongpassword')
+
+        g.auth.should be_false
+      end
+    end
+
+    it "makes sure that the URL is for a Gnip stream and not say https://google.com" do
+      VCR.use_cassette('not_a_gnip_stream') do
+        g = ChorusGnip.new(
+          :url => 'https://www.google.com',
+          :username => 'something',
+          :password => 'wrongpassword')
+
+        g.auth.should be_false
+      end
+    end
   end
 end

@@ -12,6 +12,9 @@ class ChorusGnip
   def auth
     uri = URI.parse(@url)
 
+    return false unless uri.host == 'historical.gnip.com'
+    return false unless uri.scheme == 'https'
+
     http = Net::HTTP.new(uri.host, uri.port)
     http.use_ssl = true
     http.verify_mode = OpenSSL::SSL::VERIFY_NONE
