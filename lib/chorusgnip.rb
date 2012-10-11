@@ -3,6 +3,8 @@ require "uri"
 
 class ChorusGnip
 
+  attr_reader :url
+
   def initialize(input_values)
     @url= input_values[:url]
     @username= input_values[:username]
@@ -10,7 +12,11 @@ class ChorusGnip
   end
 
   def auth
-    uri = URI.parse(@url)
+    begin
+      uri = URI.parse(@url)
+    rescue Exception => e
+      return false
+    end
 
     return false unless uri.host == 'historical.gnip.com'
     return false unless uri.scheme == 'https'

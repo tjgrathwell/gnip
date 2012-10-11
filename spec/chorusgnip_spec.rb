@@ -21,6 +21,7 @@ describe 'Chorusgnip' do
           :username => REAL_USERNAME,
           :password => REAL_PASSWORD)
 
+        g.url.should == REAL_STREAM_URL
         g.auth.should be_true
       end
     end
@@ -40,6 +41,17 @@ describe 'Chorusgnip' do
       VCR.use_cassette('plain_http_gnip') do
         g = ChorusGnip.new(
           :url => 'http://historical.gnip.com/something',
+          :username => 'someemail',
+          :password => 'wrongpassword')
+
+        g.auth.should be_false
+      end
+    end
+
+    it "returns false for a url that cannot be parsed" do
+      VCR.use_cassette('invalid') do
+        g = ChorusGnip.new(
+          :url => nil,
           :username => 'someemail',
           :password => 'wrongpassword')
 
