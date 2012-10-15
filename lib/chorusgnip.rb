@@ -9,6 +9,10 @@ class ChorusGnip
 
   attr_reader :url
 
+  def self.from_stream(url, username, password)
+    ChorusGnip.new(:url => url, :username => username, :password => password)
+  end
+
   def initialize(input_values)
     @url= input_values[:url]
     @username= input_values[:username]
