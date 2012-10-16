@@ -39,30 +39,28 @@ describe 'Chorusgnip' do
     end
 
     it "returns false for a plain HTTP url" do
-      expect do
         g = ChorusGnip.new(
         :url => 'http://historical.gnip.com/foo',
         :username => 'someemail',
         :password => 'wrongpassword')
-      end.to raise_exception
+        g.auth.should be_false
+
     end
 
     it "returns false for a url that cannot be parsed" do
-        expect do
-          g = ChorusGnip.new(
-          :url => nil,
-          :username => 'someemail',
-          :password => 'wrongpassword')
-        end.to raise_exception
+        g = ChorusGnip.new(
+        :url => nil,
+        :username => 'someemail',
+        :password => 'wrongpassword')
+        g.auth.should be_false
     end
 
     it "makes sure that the URL is for a Gnip stream and not say https://google.com" do
-      expect do
-        g = ChorusGnip.new(
-        :url => 'https://www.google.com',
-        :username => 'someemail',
-        :password => 'wrongpassword')
-      end.to raise_exception
+      g = ChorusGnip.new(
+      :url => 'https://www.google.com',
+      :username => 'someemail',
+      :password => 'wrongpassword')
+      g.auth.should be_false
     end
   end
 

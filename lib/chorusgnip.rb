@@ -17,32 +17,37 @@ class ChorusGnip
     @url= input_values[:url]
     @username= input_values[:username]
     @password= input_values[:password]
+  end
 
-    @uri = URI.parse(@url)
-    raise Exception, "URI not valid" unless @uri.host == 'historical.gnip.com'
-    raise Exception, "URI not valid" unless @uri.scheme == 'https'
+  def uri
+    @uri ||= URI.parse(@url)
   end
 
   def create_connection
-    http = Net::HTTP.new(@uri.host, @uri.port)
+    http = Net::HTTP.new(uri.host, uri.port)
     http.use_ssl = true
     http.verify_mode = OpenSSL::SSL::VERIFY_NONE
     http
   end
 
   def auth
+    raise Exception, "URI not valid" unless uri.host == 'historical.gnip.com'
+    raise Exception, "URI not valid" unless uri.scheme == 'https'
+
     http = create_connection
 
-    request = Net::HTTP::Head.new(@uri.request_uri)
+    request = Net::HTTP::Head.new(uri.request_uri)
     request.basic_auth(@username, @password)
     response = http.request(request)
 
     response.code == "200"
+  rescue Exception => e
+    false
   end
 
   def fetch
     http = create_connection
-    request = Net::HTTP::Get.new(@uri.request_uri)
+    request = Net::HTTP::Get.new(uri.request_uri)
     request.basic_auth(@username, @password)
     response = http.request(request)
     CSV.parse(response.body, { :col_sep => "\t", :quote_char => "'" }).map { |row| row.last }
