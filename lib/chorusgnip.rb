@@ -54,50 +54,15 @@ class ChorusGnip
     csv_string = CSV.generate(:force_quotes => true) do |csv|
       resources_urls.each do |value|
         list_of_hashes = GnipJson.new(:url => value).parse.each do |hsh|
-          csv << [hsh['id'], hsh['body']]
+          csv << [hsh['id'], hsh['body'], hsh['link'], hsh['postedTime'], hsh['actor']['id'], hsh['actor']['link'],
+                  hsh['actor']['displayName'], hsh['actor']['postedTime'], hsh['actor']['summary'],
+                  hsh['actor']['friendsCount'], hsh['actor']['followersCount'], hsh['actor']['statusesCount'],
+                  hsh['retweetCount'], hsh['gnip']['klout_score']]
         end
       end
     end
 
     GnipCsvResult.new(csv_string)
-
-
-      # #'message_id'
-      #       tweet_row << hsh['id']
-      #       #'spam'
-      #       tweet_row << nil
-      #       #'created_at'
-      #       tweet_row << hsh['postedTime']
-      #       #'source'
-      #       tweet_row << nil
-      #       #'retweeted'
-      #       tweet_row << hsh['retweetCount']
-      #       #'favorited'
-      #       tweet_row << nil
-      #       #'truncated'
-      #       tweet_row << nil
-      #       #'in_reply_to_screen_name',
-      #       tweet_row <<
-      #       #'in_reply_to_user_id',
-      #       #'author_id',
-      #       #'author_name',
-      #       #'author_screen_name',
-      #       #'author_lang',
-      #       #'author_url',
-      #       #'author_description',
-      #       #'author_listed_count',
-      #       #'author_statuses_count',
-      #       #'author_followers_count',
-      #       #'author_friends_count',
-      #       #'author_created_at',
-      #       #'author_location',
-      #       #'author_verified',
-      #       #'message_url',
-      #       #'message_text'
-      #
-
-
-      # Append it into a file
   end
 end
 
@@ -127,8 +92,14 @@ class GnipCsvResult
   attr_reader :contents
 
   def initialize(contents)
-    @column_names = ['id', 'body']
-    @types = ['text', 'text']
+    @column_names = ['id', 'body', 'link', 'posted_time', 'actor_id', 'actor_link',
+                                   'actor_display_name', 'actor_posted_time', 'actor_summary',
+                                   'actor_friends_count', 'actor_followers_count', 'actor_statuses_count',
+                                   'retweet_count', 'gnip_klout_score']
+    @types = ['text', 'text', 'text', 'timestamp', 'text', 'text',
+              'text', 'timestamp', 'text',
+              'integer', 'integer', 'integer',
+              'integer', 'integer']
     @contents = contents
   end
 end

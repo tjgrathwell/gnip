@@ -80,13 +80,23 @@ describe 'Chorusgnip' do
 
         result = g.to_result
         result.class.should == GnipCsvResult
+
+        result.column_names.should == ['id', 'body', 'link', 'posted_time', 'actor_id', 'actor_link',
+                                       'actor_display_name', 'actor_posted_time', 'actor_summary',
+                                       'actor_friends_count', 'actor_followers_count', 'actor_statuses_count',
+                                       'retweet_count', 'gnip_klout_score']
+        result.types.should == ['text', 'text', 'text', 'timestamp', 'text', 'text',
+                                'text', 'timestamp', 'text',
+                                'integer', 'integer', 'integer',
+                                'integer', 'integer']
+
         csv = CSV.parse(result.contents)
         csv.length.should == 42
         csv.each do |row|
-          row.length.should == 2
+          row.length.should == result.column_names.length
+          row[result.column_names.index('posted_time')].should_not be_empty
+          row[result.column_names.index('actor_posted_time')].should_not be_empty
         end
-        result.column_names.should == ['id', 'body']
-        result.types.should == ['text', 'text']
 
         # result.column_names.should == [
         #   'message_id', 'spam', 'created_at', 'source', 'retweeted', 'favorited', 'truncated', 'in_reply_to_screen_name',
