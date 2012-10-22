@@ -82,30 +82,23 @@ describe 'Chorusgnip' do
         result.column_names.should == ['id', 'body', 'link', 'posted_time', 'actor_id', 'actor_link',
                                        'actor_display_name', 'actor_posted_time', 'actor_summary',
                                        'actor_friends_count', 'actor_followers_count', 'actor_statuses_count',
-                                       'retweet_count', 'gnip_klout_score']
+                                       'retweet_count']
         result.types.should == ['text', 'text', 'text', 'timestamp', 'text', 'text',
                                 'text', 'timestamp', 'text',
                                 'integer', 'integer', 'integer',
-                                'integer', 'integer']
+                                'integer']
 
         csv = CSV.parse(result.contents)
-        csv.length.should == 42
+        f = File.open('result.csv', 'w')
+        f.puts result.contents
+        f.close
+
+        csv.length.should == 41401
         csv.each do |row|
           row.length.should == result.column_names.length
           row[result.column_names.index('posted_time')].should_not be_empty
           row[result.column_names.index('actor_posted_time')].should_not be_empty
         end
-
-        # result.column_names.should == [
-        #   'message_id', 'spam', 'created_at', 'source', 'retweeted', 'favorited', 'truncated', 'in_reply_to_screen_name',
-        #   'in_reply_to_user_id', 'author_id', 'author_name', 'author_screen_name', 'author_lang', 'author_url', 'author_description',
-        #   'author_listed_count', 'author_statuses_count', 'author_followers_count', 'author_friends_count', 'author_created_at',
-        #   'author_location', 'author_verified', 'message_url', 'message_text'
-        # ]
-        # result.types.should == [
-        #   'bigint', 'boolean', 'timestamp without time zone', 'text', 'boolean', 'boolean', 'boolean', 'text', 'bigint',
-        #   'bigint', 'text', 'text', 'text', 'text', 'text', 'integer', 'integer', 'integer', 'integer', 'timestamp without time zone', 'text', 'boolean', 'text', 'text'
-        #   ]
       end
     end
   end

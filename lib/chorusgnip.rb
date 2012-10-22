@@ -62,7 +62,7 @@ class ChorusGnip
           csv << [hsh['id'], hsh['body'], hsh['link'], hsh['postedTime'], hsh['actor']['id'], hsh['actor']['link'],
                   hsh['actor']['displayName'], hsh['actor']['postedTime'], hsh['actor']['summary'],
                   hsh['actor']['friendsCount'], hsh['actor']['followersCount'], hsh['actor']['statusesCount'],
-                  hsh['retweetCount'], hsh['gnip']['klout_score']]
+                  hsh['retweetCount']]
         end
       end
     end
@@ -100,11 +100,11 @@ class GnipCsvResult
     @column_names = ['id', 'body', 'link', 'posted_time', 'actor_id', 'actor_link',
                                    'actor_display_name', 'actor_posted_time', 'actor_summary',
                                    'actor_friends_count', 'actor_followers_count', 'actor_statuses_count',
-                                   'retweet_count', 'gnip_klout_score']
+                                   'retweet_count']
     @types = ['text', 'text', 'text', 'timestamp', 'text', 'text',
               'text', 'timestamp', 'text',
               'integer', 'integer', 'integer',
-              'integer', 'integer']
+              'integer']
     @contents = contents
   end
 end
