@@ -1,4 +1,4 @@
-require_relative '../lib/chorusgnip'
+require 'spec_helper'
 
 require 'vcr'
 require 'csv'
@@ -65,39 +65,61 @@ describe 'Chorusgnip' do
   end
 
   context "producing a valid CSV file" do
+
+    let(:g) {ChorusGnip.new(
+        :url => REAL_STREAM_URL,
+        :username => REAL_USERNAME,
+        :password => REAL_PASSWORD) }
+
+    before do
+      mock(g).to_result_in_batches(anything) {GnipCsvResult.new("")}
+    end
     it "gets all the historical data" do
       VCR.use_cassette('successful_get') do
-        g = ChorusGnip.new(
-          :url => REAL_STREAM_URL,
-          :username => REAL_USERNAME,
-          :password => REAL_PASSWORD)
 
         results = g.fetch
         results.length.should_not == 0
         results.each { |url| url.should include('https:') }
 
         result = g.to_result
-        result.class.should == GnipCsvResult
 
-        result.column_names.should == ['id', 'body', 'link', 'posted_time', 'actor_id', 'actor_link',
-                                       'actor_display_name', 'actor_posted_time', 'actor_summary',
-                                       'actor_friends_count', 'actor_followers_count', 'actor_statuses_count',
-                                       'retweet_count']
-        result.types.should == ['text', 'text', 'text', 'timestamp', 'text', 'text',
-                                'text', 'timestamp', 'text',
-                                'integer', 'integer', 'integer',
-                                'integer']
+      end
+    end
+  end
+  context "producing an array of CSV files" do
+    it "gets all the historical data" do
+      VCR.use_cassette('successful_get') do
+        g = ChorusGnip.new(
+            :url => REAL_STREAM_URL,
+            :username => REAL_USERNAME,
+            :password => REAL_PASSWORD)
 
-        csv = CSV.parse(result.contents)
+        result_urls = g.fetch
+        result_urls.length.should_not == 0
+        result_urls.each { |url| url.should include('https:') }
+
+        results = g.to_result_in_batches(result_urls)
+        results.class.should == GnipCsvResult
+
+        results.column_names.should == ['id', 'body', 'link', 'posted_time', 'actor_id', 'actor_link',
+                                           'actor_display_name', 'actor_posted_time', 'actor_summary',
+                                           'actor_friends_count', 'actor_followers_count', 'actor_statuses_count',
+                                           'retweet_count']
+        results.types.should == ['text', 'text', 'text', 'timestamp', 'text', 'text',
+                                    'text', 'timestamp', 'text',
+                                    'integer', 'integer', 'integer',
+                                    'integer']
+
+        csv = CSV.parse(results.contents)
         f = File.open('result.csv', 'w')
-        f.puts result.contents
+        f.puts results.contents
         f.close
 
-        csv.length.should == 41401
+        csv.length.should == 42
         csv.each do |row|
-          row.length.should == result.column_names.length
-          row[result.column_names.index('posted_time')].should_not be_empty
-          row[result.column_names.index('actor_posted_time')].should_not be_empty
+          row.length.should == results.column_names.length
+          row[results.column_names.index('posted_time')].should_not be_empty
+          row[results.column_names.index('actor_posted_time')].should_not be_empty
         end
       end
     end

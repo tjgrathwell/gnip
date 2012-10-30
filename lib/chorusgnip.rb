@@ -50,14 +50,17 @@ class ChorusGnip
     request = Net::HTTP::Get.new(uri.request_uri)
     request.basic_auth(@username, @password)
     response = http.request(request)
-    CSV.parse(response.body, { :col_sep => "\t", :quote_char => "'" }).map { |row| row.last }
+    CSV.parse(response.body, {:col_sep => "\t", :quote_char => "'"}).map { |row| row.last }
   end
 
   def to_result
-    resources_urls = fetch
+    resource_urls = fetch
+    to_result_in_batches(resource_urls)
+  end
 
+  def to_result_in_batches(resource_urls)
     csv_string = CSV.generate(:force_quotes => true) do |csv|
-      resources_urls.each do |value|
+      resource_urls.each do |value|
         list_of_hashes = GnipJson.new(:url => value).parse.each do |hsh|
           csv << [hsh['id'], hsh['body'], hsh['link'], hsh['postedTime'], hsh['actor']['id'], hsh['actor']['link'],
                   hsh['actor']['displayName'], hsh['actor']['postedTime'], hsh['actor']['summary'],
@@ -66,7 +69,6 @@ class ChorusGnip
         end
       end
     end
-
     GnipCsvResult.new(csv_string)
   end
 end
@@ -87,7 +89,7 @@ class GnipJson
     request = Net::HTTP::Get.new(uri.request_uri)
     response = http.request(request)
     gz = Zlib::GzipReader.new(StringIO.new(response.body))
-    gz.read.split("\n").reject{ |e| e.match(/^\s*$/) }[0...-1].inject([]) { |a, value| a << JSON.parse(value) }
+    gz.read.split("\n").reject { |e| e.match(/^\s*$/) }[0...-1].inject([]) { |a, value| a << JSON.parse(value) }
   end
 end
 
@@ -98,9 +100,9 @@ class GnipCsvResult
 
   def initialize(contents)
     @column_names = ['id', 'body', 'link', 'posted_time', 'actor_id', 'actor_link',
-                                   'actor_display_name', 'actor_posted_time', 'actor_summary',
-                                   'actor_friends_count', 'actor_followers_count', 'actor_statuses_count',
-                                   'retweet_count']
+                     'actor_display_name', 'actor_posted_time', 'actor_summary',
+                     'actor_friends_count', 'actor_followers_count', 'actor_statuses_count',
+                     'retweet_count']
     @types = ['text', 'text', 'text', 'timestamp', 'text', 'text',
               'text', 'timestamp', 'text',
               'integer', 'integer', 'integer',
