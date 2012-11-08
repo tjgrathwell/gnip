@@ -6,7 +6,7 @@ require 'csv'
 REAL_STREAM_URL=''
 REAL_USERNAME=''
 REAL_PASSWORD=''
-
+REAL_GNIP_JSON_URL=''
 
 VCR.configure do |c|
   c.cassette_library_dir = 'fixtures/vcr_cassettes'
@@ -14,6 +14,24 @@ VCR.configure do |c|
 end
 
 describe 'Chorusgnip' do
+  describe "create_connection" do
+    let(:chorus_gnip) do
+      ChorusGnip.new(
+          :url => REAL_STREAM_URL,
+          :username => REAL_USERNAME,
+          :password => REAL_PASSWORD)
+    end
+
+    it "sets verify mode to VERIFY_PEER" do
+      chorus_gnip.create_connection.verify_mode.should == OpenSSL::SSL::VERIFY_PEER
+    end
+
+    it "sets the ca_file to the correct certificate" do
+      cert_path = File.expand_path('../../../lib/ssl-certs/cert.pem', __FILE__)
+      chorus_gnip.create_connection.ca_file.should == cert_path
+    end
+  end
+
   context "validates a gnip url" do
     it "return true for valid credentials" do
       VCR.use_cassette('authorized_gnip') do
@@ -125,7 +143,7 @@ describe 'Chorusgnip' do
     end
   end
 
-  context "operations on a single JSON file" do
+  it "operations on a single JSON file" do
     VCR.use_cassette('3_activity_json') do
       c = GnipJson.new(:url => REAL_GNIP_JSON_URL)
       activity_list = c.parse
