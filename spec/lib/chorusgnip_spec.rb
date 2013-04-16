@@ -1,25 +1,19 @@
 require 'spec_helper'
 
-require 'vcr'
-require 'csv'
-
-REAL_STREAM_URL=''
-REAL_USERNAME=''
-REAL_PASSWORD=''
-REAL_GNIP_JSON_URL=''
-
-VCR.configure do |c|
-  c.cassette_library_dir = 'fixtures/vcr_cassettes'
-  c.hook_into :fakeweb
-end
-
 describe 'Chorusgnip' do
+  # our gnip urls are only good for 14 days,
+  # so when you need to run tests, get a new one and put it here
+  let(:real_stream_url) { '' }
+  let(:real_username) { '' }
+  let(:real_password) { '' }
+  let(:real_gnip_json_url) { '' }
+
   describe "create_connection" do
     let(:chorus_gnip) do
       ChorusGnip.new(
-          :url => REAL_STREAM_URL,
-          :username => REAL_USERNAME,
-          :password => REAL_PASSWORD)
+          :url => real_stream_url,
+          :username => real_username,
+          :password => real_password)
     end
 
     it "sets verify mode to VERIFY_PEER" do
@@ -35,62 +29,62 @@ describe 'Chorusgnip' do
   context "validates a gnip url" do
     it "return true for valid credentials" do
       VCR.use_cassette('authorized_gnip') do
-        g = ChorusGnip.new(
-          :url => REAL_STREAM_URL,
-          :username => REAL_USERNAME,
-          :password => REAL_PASSWORD)
+        gnip_stream = ChorusGnip.new(
+            :url => real_stream_url,
+            :username => real_username,
+            :password => real_password)
 
-        g.url.should == REAL_STREAM_URL
-        g.auth.should be_true
+        gnip_stream.url.should == real_stream_url
+        gnip_stream.auth.should be_true
       end
     end
 
     it "return false for invalid credentials" do
       VCR.use_cassette('unauthorized_gnip') do
-        g = ChorusGnip.new(
-          :url => REAL_STREAM_URL,
-          :username => REAL_USERNAME,
-          :password => 'wrongpassword')
+        gnip_stream = ChorusGnip.new(
+            :url => real_stream_url,
+            :username => real_username,
+            :password => 'wrongpassword')
 
-        g.auth.should be_false
+        gnip_stream.auth.should be_false
       end
     end
 
     it "returns false for a plain HTTP url" do
-        g = ChorusGnip.new(
-        :url => 'http://historical.gnip.com/foo',
-        :username => 'someemail',
-        :password => 'wrongpassword')
-        g.auth.should be_false
+      gnip_stream = ChorusGnip.new(
+          :url => 'http://historical.gnip.com/foo',
+          :username => 'someemail',
+          :password => 'wrongpassword')
+      gnip_stream.auth.should be_false
 
     end
 
     it "returns false for a url that cannot be parsed" do
-        g = ChorusGnip.new(
-        :url => nil,
-        :username => 'someemail',
-        :password => 'wrongpassword')
-        g.auth.should be_false
+      gnip_stream = ChorusGnip.new(
+          :url => nil,
+          :username => 'someemail',
+          :password => 'wrongpassword')
+      gnip_stream.auth.should be_false
     end
 
     it "makes sure that the URL is for a Gnip stream and not say https://google.com" do
       g = ChorusGnip.new(
-      :url => 'https://www.google.com',
-      :username => 'someemail',
-      :password => 'wrongpassword')
+          :url => 'https://www.google.com',
+          :username => 'someemail',
+          :password => 'wrongpassword')
       g.auth.should be_false
     end
   end
 
   context "producing a valid CSV file" do
 
-    let(:g) {ChorusGnip.new(
-        :url => REAL_STREAM_URL,
-        :username => REAL_USERNAME,
-        :password => REAL_PASSWORD) }
+    let(:g) { ChorusGnip.new(
+        :url => real_stream_url,
+        :username => real_username,
+        :password => real_password) }
 
     before do
-      mock(g).to_result_in_batches(anything) {GnipCsvResult.new("")}
+      mock(g).to_result_in_batches(anything) { GnipCsvResult.new("") }
     end
     it "gets all the historical data" do
       VCR.use_cassette('successful_get') do
@@ -107,26 +101,26 @@ describe 'Chorusgnip' do
   context "producing an array of CSV files" do
     it "gets all the historical data" do
       VCR.use_cassette('successful_get') do
-        g = ChorusGnip.new(
-            :url => REAL_STREAM_URL,
-            :username => REAL_USERNAME,
-            :password => REAL_PASSWORD)
+        gnip_stream = ChorusGnip.new(
+            :url => real_stream_url,
+            :username => real_username,
+            :password => real_password)
 
-        result_urls = g.fetch
+        result_urls = gnip_stream.fetch
         result_urls.length.should_not == 0
         result_urls.each { |url| url.should include('https:') }
 
-        results = g.to_result_in_batches(result_urls)
+        results = gnip_stream.to_result_in_batches(result_urls)
         results.class.should == GnipCsvResult
 
         results.column_names.should == ['id', 'body', 'link', 'posted_time', 'actor_id', 'actor_link',
-                                           'actor_display_name', 'actor_posted_time', 'actor_summary',
-                                           'actor_friends_count', 'actor_followers_count', 'actor_statuses_count',
-                                           'retweet_count']
+                                        'actor_display_name', 'actor_posted_time', 'actor_summary',
+                                        'actor_friends_count', 'actor_followers_count', 'actor_statuses_count',
+                                        'retweet_count']
         results.types.should == ['text', 'text', 'text', 'timestamp', 'text', 'text',
-                                    'text', 'timestamp', 'text',
-                                    'integer', 'integer', 'integer',
-                                    'integer']
+                                 'text', 'timestamp', 'text',
+                                 'integer', 'integer', 'integer',
+                                 'integer']
 
         csv = CSV.parse(results.contents)
         f = File.open('result.csv', 'w')
@@ -145,7 +139,7 @@ describe 'Chorusgnip' do
 
   it "operations on a single JSON file" do
     VCR.use_cassette('3_activity_json') do
-      c = GnipJson.new(:url => REAL_GNIP_JSON_URL)
+      c = GnipJson.new(:url => real_gnip_json_url)
       activity_list = c.parse
       activity_list.length.should == 3
       activity_list.each { |hash| hash['id'].should_not == nil }

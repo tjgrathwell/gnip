@@ -9,6 +9,20 @@ class ChorusGnip
 
   attr_reader :url
 
+  def self.column_names
+    ['id', 'body', 'link', 'posted_time', 'actor_id', 'actor_link',
+     'actor_display_name', 'actor_posted_time', 'actor_summary',
+     'actor_friends_count', 'actor_followers_count', 'actor_statuses_count',
+     'retweet_count']
+  end
+
+  def self.column_types
+    ['text', 'text', 'text', 'timestamp', 'text', 'text',
+     'text', 'timestamp', 'text',
+     'integer', 'integer', 'integer',
+     'integer']
+  end
+
   def self.from_stream(url, username, password)
     ChorusGnip.new(:url => url, :username => username, :password => password)
   end
@@ -62,7 +76,7 @@ class ChorusGnip
   def to_result_in_batches(resource_urls)
     csv_string = CSV.generate(:force_quotes => true) do |csv|
       resource_urls.each do |value|
-        list_of_hashes = GnipJson.new(:url => value).parse.each do |hsh|
+        GnipJson.new(:url => value).parse.each do |hsh|
           csv << [hsh['id'], hsh['body'], hsh['link'], hsh['postedTime'], hsh['actor']['id'], hsh['actor']['link'],
                   hsh['actor']['displayName'], hsh['actor']['postedTime'], hsh['actor']['summary'],
                   hsh['actor']['friendsCount'], hsh['actor']['followersCount'], hsh['actor']['statusesCount'],
@@ -100,14 +114,8 @@ class GnipCsvResult
   attr_reader :contents
 
   def initialize(contents)
-    @column_names = ['id', 'body', 'link', 'posted_time', 'actor_id', 'actor_link',
-                     'actor_display_name', 'actor_posted_time', 'actor_summary',
-                     'actor_friends_count', 'actor_followers_count', 'actor_statuses_count',
-                     'retweet_count']
-    @types = ['text', 'text', 'text', 'timestamp', 'text', 'text',
-              'text', 'timestamp', 'text',
-              'integer', 'integer', 'integer',
-              'integer']
+    @column_names = ChorusGnip.column_names
+    @types = ChorusGnip.column_types
     @contents = contents
   end
 end
